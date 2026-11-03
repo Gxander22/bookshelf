@@ -69,6 +69,13 @@ form {
     object-fit: cover;
 }
 
+.current-cover {
+    display: block;
+    width: min(100%, 220px);
+    max-height: 280px;
+    object-fit: cover;
+}
+
 .tag {
     display: inline-block;
     padding: 5px 9px;
