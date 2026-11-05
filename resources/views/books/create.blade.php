@@ -2,6 +2,7 @@
 
 @section('content')
     <h1>Add New Book</h1>
+    <a class="button" href="{{ route('books.index') }}">Back to Books</a>
 
     <form action="{{ route('books.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
