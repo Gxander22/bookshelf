@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
+use App\Models\Publisher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -14,7 +15,7 @@ class BookController extends Controller
 {
     public function index(): View
     {
-        $books = Book::all();
+        $books = Book::with('publisher')->get();
 
         return view('books.index', ['books' => $books]);
     }
@@ -26,7 +27,9 @@ class BookController extends Controller
 
     public function create(): View
     {
-        return view('books.create');
+        return view('books.create', [
+            'publishers' => Publisher::query()->orderBy('name')->get(),
+        ]);
     }
 
     public function edit(Book $book): View
@@ -41,6 +44,7 @@ class BookController extends Controller
             'author' => ['required', 'string', 'max:100'],
             'genre' => ['required', 'string', 'max:50'],
             'cover' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'publisher_id' => ['nullable', 'integer', 'exists:publishers,id'],
         ]);
 
         if ($request->hasFile('cover')) {
@@ -67,6 +71,7 @@ class BookController extends Controller
             'author' => ['required', 'string', 'max:100'],
             'genre' => ['required', 'string', 'max:50'],
             'cover' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'publisher_id' => ['nullable', 'integer', 'exists:publishers,id'],
         ]);
 
         $oldCover = $book->cover;
@@ -102,7 +107,16 @@ class BookController extends Controller
         return redirect()
             ->route('books.index')
             ->with('success', 'Book updated successfully.');
-        
-        
+
+    }
+
+    public function destroy(Book $book)
+    {
+        $book->delete();
+
+        return redirect()
+            ->route('books.index')
+            ->with('success', 'Book deleted successfully.');
+
     }
 }

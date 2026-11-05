@@ -16,11 +16,21 @@
                 @if ($book->cover)
                     <img src="{{ filter_var($book->cover, FILTER_VALIDATE_URL) ? 
                     $book->cover : asset('storage/'.$book->cover) }}" alt="{{ $book->title }}">
+                @else
+                    <div class="card-cover-placeholder" role="img" aria-label="No cover available for {{ $book->title }}">
+                        <span aria-hidden="true">{{ $book->title }}</span>
+                    </div>
                 @endif
 
                 <h2>{{ $book->title }}</h2>
                 <p>by {{ $book->author }}</p>
-                <a class="button" href="{{ route('books.edit', $book) }}">Edit</a>
+                <p>Publisher: {{ $book->publisher->name ?? 'Unknown' }}</p>
+                <a class="button" href="{{ route('books.edit', $book) }}">Edit Books</a>
+                <form action="{{ route('books.destroy', $book) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this book?');">
+                    @csrf
+                    @method('DELETE')
+                    <a type="submit" class="button delete">Delete</a>
+                </form>
             </article>
         @empty
             <p>No books available yet.</p>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Book;
+use App\Models\Publisher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -20,6 +21,8 @@ test('the books page displays books', function () {
         ->assertOk()
         ->assertSeeText('The Hobbit')
         ->assertSeeText('J. R. R. Tolkien')
+        ->assertSee('class="card-cover-placeholder"', false)
+        ->assertSee('aria-label="No cover available for The Hobbit"', false)
         ->assertSee(route('books.edit', $book));
 });
 
@@ -57,6 +60,29 @@ test('a book can be created with an uploaded cover', function () {
     $this->get(route('books.index'))
         ->assertOk()
         ->assertSeeText('Dune');
+});
+
+test('the create form lists publishers and saves the selected publisher', function () {
+    $publisher = Publisher::create([
+        'name' => 'Acme Publishing',
+    ]);
+
+    $this->get(route('books.create'))
+        ->assertOk()
+        ->assertSee('value="'.$publisher->id.'"', false)
+        ->assertSeeText('Acme Publishing');
+
+    $this->post(route('books.store'), [
+        'title' => 'Published Book',
+        'author' => 'A. Writer',
+        'genre' => 'Fiction',
+        'publisher_id' => $publisher->id,
+    ])->assertRedirect(route('books.index'));
+
+    $this->assertDatabaseHas('books', [
+        'title' => 'Published Book',
+        'publisher_id' => $publisher->id,
+    ]);
 });
 
 test('a book can be edited without replacing its cover', function () {
