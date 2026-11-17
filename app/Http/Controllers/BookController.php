@@ -15,7 +15,7 @@ class BookController extends Controller
 {
     public function index(): View
     {
-        $books = Book::with('publisher')->get();
+        $books = Book::with('publisher')->orderBy('id')->paginate(6);
 
         return view('books.index', ['books' => $books]);
     }
@@ -110,8 +110,12 @@ class BookController extends Controller
 
     }
 
-    public function destroy(Book $book)
+    public function destroy(Book $book): RedirectResponse
     {
+        if ($book->cover && ! filter_var($book->cover, FILTER_VALIDATE_URL)) {
+            Storage::disk('public')->delete($book->cover);
+        }
+
         $book->delete();
 
         return redirect()

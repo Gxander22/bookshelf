@@ -2,6 +2,7 @@
 
 use App\Models\Book;
 use App\Models\Publisher;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -21,12 +22,88 @@ test('the books page displays books', function () {
         ->assertOk()
         ->assertSeeText('The Hobbit')
         ->assertSeeText('J. R. R. Tolkien')
+        ->assertSee(route('books.show', $book))
         ->assertSee('class="card-cover-placeholder"', false)
         ->assertSee('aria-label="No cover available for The Hobbit"', false)
-        ->assertSee(route('books.edit', $book));
+        ->assertSee(route('books.create'))
+        ->assertDontSee(route('books.edit', $book))
+        ->assertDontSee('<button type="submit" class="button delete">Delete</button>', false);
+});
+
+test('a book can be opened to see its full details', function () {
+    $publisher = Publisher::create([
+        'name' => 'Acme Publishing',
+        'address' => '100 Book Lane',
+        'website' => 'https://acme.example',
+    ]);
+
+    $book = Book::create([
+        'title' => 'The Hobbit',
+        'author' => 'J. R. R. Tolkien',
+        'genre' => 'Fantasy',
+        'cover' => 'https://books.example/hobbit.jpg',
+        'publisher_id' => $publisher->id,
+    ]);
+
+    $this->get(route('books.show', $book))
+        ->assertOk()
+        ->assertSeeText('The Hobbit')
+        ->assertSeeText('J. R. R. Tolkien')
+        ->assertSeeText('Fantasy')
+        ->assertSeeText('Acme Publishing')
+        ->assertSeeText('100 Book Lane')
+        ->assertSeeText('https://acme.example')
+        ->assertSee('src="https://books.example/hobbit.jpg"', false)
+        ->assertSee(route('books.index'));
+});
+
+test('the books page shows six books per page', function () {
+    foreach (range(1, 7) as $number) {
+        Book::create([
+            'title' => "Book {$number}",
+            'author' => 'A. Writer',
+            'genre' => 'Fiction',
+        ]);
+    }
+
+    $this->get(route('books.index'))
+        ->assertOk()
+        ->assertSeeText('Book 1')
+        ->assertSeeText('Book 2')
+        ->assertSeeText('Book 3')
+        ->assertSeeText('Book 6')
+        ->assertDontSeeText('Book 7')
+        ->assertSee(route('books.index').'?page=2');
+
+    $this->get(route('books.index', ['page' => 2]))
+        ->assertOk()
+        ->assertSeeText('Book 7')
+        ->assertDontSeeText('Book 1')
+        ->assertSee(route('books.index'));
+});
+
+test('a book can be deleted from the books page', function () {
+    $this->actingAs(User::factory()->create());
+
+    $book = Book::create([
+        'title' => 'The Hobbit',
+        'author' => 'J. R. R. Tolkien',
+        'genre' => 'Fantasy',
+    ]);
+
+    $this->get(route('books.index'))
+        ->assertOk()
+        ->assertSee('<button type="submit" class="button delete">Delete</button>', false);
+
+    $this->delete(route('books.destroy', $book))
+        ->assertRedirect(route('books.index'))
+        ->assertSessionHas('success', 'Book deleted successfully.');
+
+    $this->assertDatabaseMissing('books', ['id' => $book->id]);
 });
 
 test('a book can be created with an uploaded cover', function () {
+    $this->actingAs(User::factory()->create());
     Storage::fake('public');
 
     $this->get(route('books.create'))
@@ -63,6 +140,8 @@ test('a book can be created with an uploaded cover', function () {
 });
 
 test('the create form lists publishers and saves the selected publisher', function () {
+    $this->actingAs(User::factory()->create());
+
     $publisher = Publisher::create([
         'name' => 'Acme Publishing',
     ]);
@@ -86,6 +165,7 @@ test('the create form lists publishers and saves the selected publisher', functi
 });
 
 test('a book can be edited without replacing its cover', function () {
+    $this->actingAs(User::factory()->create());
     Storage::fake('public');
     Storage::disk('public')->put('covers/original.png', 'original cover');
 
@@ -124,6 +204,7 @@ test('a book can be edited without replacing its cover', function () {
 });
 
 test('editing a book replaces its existing uploaded cover', function () {
+    $this->actingAs(User::factory()->create());
     Storage::fake('public');
     Storage::disk('public')->put('covers/original.png', 'original cover');
 

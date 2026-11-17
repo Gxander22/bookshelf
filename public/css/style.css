@@ -25,6 +25,22 @@ h1 {
     color: #68736d;
 }
 
+.account-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.account-actions form {
+    display: block;
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+}
+
 .button,
 button {
     display: inline-block;
@@ -46,9 +62,34 @@ button:hover {
 
 .book-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 300px));
+    justify-content: center;
     gap: 20px;
     margin-top: 32px;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 32px;
+}
+
+.book-card-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+}
+
+.book-card-link:hover h2,
+.book-card-link:focus-visible h2 {
+    color: #315d49;
+    text-decoration: underline;
+}
+
+.book-card-link:focus-visible {
+    outline: 2px solid #315d49;
+    outline-offset: 4px;
 }
 
 .card,
@@ -146,6 +187,10 @@ form {
     margin-top: 24px;
 }
 
+form > a.button {
+    text-align: center;
+}
+
 input {
     width: 100%;
     padding: 10px;
@@ -176,11 +221,6 @@ main > img {
 @media (max-width: 500px) {
     .container {
         padding: 32px 0;
-    }
-
-    .book-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 12px;
     }
 
     .card img {

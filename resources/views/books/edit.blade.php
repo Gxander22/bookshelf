@@ -37,6 +37,6 @@
         @enderror
 
         <button type="submit">Save Changes</button>
-        <a href="{{ route('books.index') }}">Cancel</a>
+        <a class="button" href="{{ route('books.index') }}">Cancel</a>
     </form>
 @endsection
